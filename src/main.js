@@ -1,0 +1,270 @@
+class MainScene extends Phaser.Scene {
+  constructor() {
+    super('MainScene');
+    this.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+  }
+
+  init(data) {
+    this.data = data;
+    this.movies = this.data.allMovies;
+    this.maxWrong = 6;
+    this.guessed = [];
+    this.wrong = 0;
+    this.timeLeft = 120;
+  }
+
+  preload() {
+    // Choose easier (shorter) titles for early rounds
+    const easyMovies = this.movies.filter(m => m.title.length <= 10);
+    const mediumMovies = this.movies.filter(m => m.title.length <= 15);
+    const hardMovies = this.movies;
+
+    if (GameState.round <= 5) {
+      this.movie = Phaser.Utils.Array.GetRandom(easyMovies);
+    } else if (GameState.round <= 15) {
+      this.movie = Phaser.Utils.Array.GetRandom(mediumMovies);
+    } else {
+      this.movie = Phaser.Utils.Array.GetRandom(hardMovies);
+    }
+    console.log('chosen', this.movie);
+    this.title = this.movie.title;
+    this.load.image(this.title , this.movie.backdrop_url);
+  }
+
+  create() {
+    this.spendCoins(10);
+
+    // 🖼️ Movie Poster
+    const poster = this.add.image(this.scale.width / 2, 150, this.title);
+    poster.setScale(Math.min(300 / poster.width, 300 / poster.height));
+
+    this.maskedText = this.add.text(this.scale.width / 2, 300, this.getMasked(), {
+      font: '36px Courier',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    // 🧮 HUD (Coins, Strikes, Timer)
+    this.createTopBar();
+
+    // ⌨️ Keyboard
+    this.createKeyboard();
+
+    // ✏️ Solve Input (and Reveal button)
+    this.createSolveInput();
+  }
+
+  createTopBar() {
+    this.add.rectangle(this.scale.width / 2, 10, this.scale.width, 50, 0x000000, 0.4).setOrigin(0.5);
+
+    this.coinsText = this.add.text(30, 20, `🪙 ${GameState.coins}`, {
+      font: '20px Arial',
+      fill: '#fff'
+    });
+
+    this.strikesText = this.add.text(this.scale.width / 2 - 50, 20, `❌ ${this.wrong}/${this.maxWrong}`, {
+      font: '20px Arial',
+      fill: '#ff4444'
+    });
+
+    this.timerText = this.add.text(this.scale.width - 120, 20, `⏱ ${this.timeLeft}s`, {
+      font: '20px Arial',
+      fill: '#ff4444'
+    });
+
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.updateTimer,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  getMasked() {
+    return this.title.split('').map(ch=>{
+      if (ch === ' ') return ' ';
+      return this.guessed.includes(ch) ? ch : '_';
+    }).join(' ');
+  }
+
+  createKeyboard() {
+    const spacing = 45;
+    const startX = this.scale.width / 2 - (spacing * 6);
+    const startY = 400;
+    const rowLength = 13;
+
+    this.letters.forEach((letter, i) => {
+      const x = startX + (i % rowLength) * spacing;
+      const y = startY + Math.floor(i / rowLength) * spacing;
+
+      const key = this.add.text(x, y, letter, {
+        font: '20px Arial',
+        backgroundColor: '#f0f0f0',
+        color: '#000',
+        padding: 10
+      }).setOrigin(0.5).setInteractive();
+
+      key.on('pointerover', () => key.setStyle({ backgroundColor: '#ddd' }));
+      key.on('pointerout', () => key.setStyle({ backgroundColor: '#f0f0f0' }));
+
+      key.on('pointerdown', () => {
+        this.clickSound?.play();
+        key.disableInteractive();
+        key.setAlpha(0.5);
+        this.handleLetter(letter);
+      });
+    });
+
+    // Reveal button (moved to right corner)
+    const revealBtn = this.add.text(this.scale.width - 120, this.scale.height - 60, '💡 Reveal (-10)', {
+      font: '18px Arial',
+      backgroundColor: '#333',
+      color: '#fff',
+      padding: 10
+    }).setOrigin(0.5).setInteractive();
+
+    revealBtn.on('pointerdown', () => {
+      this.clickSound?.play();
+      this.revealRandomLetter();
+    });
+  }
+
+  handleLetter(L) {
+    if (this.guessed.includes(L)) return;
+
+    this.guessed.push(L);
+
+    if (this.title.includes(L)) {
+      this.maskedText.setText(this.getMasked());
+      if (!this.getMasked().includes('_')) {
+        this.win();
+      }
+    } else {
+      this.wrong++;
+      this.strikesText.setText(`❌ ${this.wrong}/${this.maxWrong}`);
+      if (this.wrong === 3) {
+        this.revealRandomLetter();
+      }
+      if (this.wrong >= this.maxWrong) {
+        this.lose();
+      }
+    }
+  }
+
+  createSolveInput() {
+    const wrapper = document.createElement('div');
+    wrapper.id = 'solveWrapper';
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '88%';
+    wrapper.style.left = '50%';
+    wrapper.style.transform = 'translateX(-50%)';
+    wrapper.style.display = 'flex';
+    wrapper.style.gap = '10px';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.zIndex = 1000;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Guess the movie name';
+    input.id = 'solveInput';
+    input.style.fontSize = '18px';
+    input.style.padding = '10px';
+    input.style.borderRadius = '6px';
+    input.style.border = '2px solid #ccc';
+    input.style.width = '260px';
+
+    const solveBtn = document.createElement('button');
+    solveBtn.innerText = 'Solve';
+    solveBtn.style.padding = '10px 15px';
+    solveBtn.style.fontSize = '16px';
+    solveBtn.style.backgroundColor = '#28a745';
+    solveBtn.style.color = 'white';
+    solveBtn.style.border = 'none';
+    solveBtn.style.borderRadius = '5px';
+    solveBtn.style.cursor = 'pointer';
+
+    solveBtn.onclick = () => {
+      this.clickSound?.play();
+      const guess = input.value.trim().toUpperCase();
+      if (guess === this.title.toUpperCase()) {
+        this.win();
+      } else {
+        this.wrong = this.maxWrong;
+        this.strikesText.setText(`❌ ${this.wrong}/${this.maxWrong}`);
+        this.lose();
+      }
+    };
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(solveBtn);
+    document.body.appendChild(wrapper);
+  }
+
+  updateTimer() {
+    this.timeLeft--;
+    this.timerText.setText(`⏱ ${this.timeLeft}s`);
+
+    if (this.timeLeft <= 0) {
+      this.timerEvent.remove();
+      this.scene.start('GameOverScene', {
+        won: false,
+        title: this.title,
+        allMovies: this.movies
+      });
+    }
+  }
+
+  revealRandomLetter() {
+    if (!this.spendCoins(10)) {
+      alert("Not enough coins to reveal a letter!");
+      return;
+    } else {
+      this.coinsText.setText(`🪙 ${GameState.coins}`)
+    }
+    const hiddenLetters = this.title
+      .split('')
+      .filter(ch => ch !== ' ' && !this.guessed.includes(ch));
+
+    if (hiddenLetters.length === 0) return;
+
+    const randomLetter = Phaser.Utils.Array.GetRandom(hiddenLetters);
+    this.guessed.push(randomLetter);
+    this.maskedText.setText(this.getMasked());
+  }
+
+  addCoins(amount) {
+    GameState.coins += amount;
+    localStorage.setItem('coins', GameState.coins);
+  }
+
+  spendCoins(amount) {
+    if (GameState.coins >= amount) {
+      GameState.coins -= amount;
+      localStorage.setItem('coins', GameState.coins);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  shutdown() {
+    const wrapper = document.getElementById('solveWrapper');
+    if (wrapper) {
+      document.body.removeChild(wrapper);
+    }
+  }
+
+  win() {
+    GameState.score += 10;
+    this.addCoins(20);
+    GameState.round++;
+    this.scene.start('GameOverScene', {
+      won: true, title: this.title, allMovies: this.movies, score: GameState.score
+    }); 
+  }
+
+  lose() {
+    this.scene.start('GameOverScene', {
+      won: false, title: this.title, allMovies: this.movies, score: GameState.score
+    }); 
+  }
+}

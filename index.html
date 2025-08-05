@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phraser Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+    #phaser-game { width: 100%; height: 100%; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="phaser-game"></div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <!--<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>-->
+  <script>
+    // Initialize CrazyGames SDK
+    window.CrazyGamesSDK = null;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      if (typeof Crazygames !== "undefined" && Crazygames?.init) {
+        Crazygames.init().then(sdk => {
+          console.log("✅ CrazyGames SDK initialized");
+          window.CrazyGamesSDK = sdk;
+        }).catch(err => {
+          console.error("CrazyGames SDK failed to initialize:", err);
+        });
+      } else {
+        console.warn("CrazyGames SDK not available or failed to load.");
+      }
+    });
+  </script>
+  <script src="src/background.js"></script>
+  <script src="src/preload.js"></script>
+  <script src="src/main.js"></script>
+  <script src="src/game_over.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
