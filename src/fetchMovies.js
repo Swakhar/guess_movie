@@ -20,11 +20,16 @@ async function fetchAllMovies() {
     const res = await fetch(url);
     const data = await res.json();
 
+    const allowedCharsForTitle = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const movies = data.results.filter(movie =>
       movie.poster_path &&
       movie.backdrop_path &&
       movie.overview &&
-      movie.overview.trim().length > 0
+      movie.overview.trim().length > 0 &&
+      /^[A-Z0-9 ]+$/i.test(movie.title) && // ✅ Only allow letters/numbers/spaces
+      movie.title.toUpperCase().split('').every(char =>
+        allowedCharsForTitle.includes(char) || char === ' '
+      )
     ).map(movie => ({
       title: movie.title.toUpperCase(),
       overview: movie.overview,
@@ -37,8 +42,8 @@ async function fetchAllMovies() {
     await delay(DELAY_MS);
   }
 
-  fs.writeFileSync('top_10000_movies.json', JSON.stringify(allMovies, null, 2));
-  console.log('🎉 Saved top_10000_movies.json!');
+  fs.writeFileSync('top_movies.json', JSON.stringify(allMovies, null, 2));
+  console.log('🎉 Saved top_movies.json!');
 }
 
 fetchAllMovies();

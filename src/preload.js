@@ -7,7 +7,7 @@ class PreloadScene extends Phaser.Scene {
   preload() {
     this.load.audio('click', 'assets/click.mp3');
     this.load.audio('bgm', 'assets/bg-music.mp3');
-    this.load.json('movies', 'assets/top_10000_movies.json');
+    this.load.json('movies', 'assets/top_movies.json');
   }
   create() {
     // Music
