@@ -15,7 +15,6 @@ const config = {
 
 window.GameState = {
   score: 0,
-  highScores: [],
   round: 1,
   coins: parseInt(localStorage.getItem('coins') || '100')
 };
