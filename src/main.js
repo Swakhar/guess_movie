@@ -178,7 +178,7 @@ class MainScene extends Phaser.Scene {
     input.type = 'text';
     input.placeholder = 'Guess the movie name';
     input.id = 'solveInput';
-    input.style.fontSize = '18px';
+    input.style.fontSize = window.innerWidth < 500 ? '14px' : '18px';
     input.style.padding = '10px';
     input.style.borderRadius = '6px';
     input.style.border = '2px solid #ccc';
