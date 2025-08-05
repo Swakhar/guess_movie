@@ -128,12 +128,11 @@ class MainScene extends Phaser.Scene {
     });
   }
 
-  handleLetter(L) {
-    if (this.guessed.includes(L)) return;
+  handleLetter(letter) {
+    if (this.guessed.includes(letter)) return;
+    this.guessed.push(letter);
 
-    this.guessed.push(L);
-
-    if (this.title.includes(L)) {
+    if (this.title.includes(letter)) {
       this.maskedText.setText(this.getMasked());
       if (!this.getMasked().includes('_')) {
         this.win();
@@ -141,6 +140,16 @@ class MainScene extends Phaser.Scene {
     } else {
       this.wrong++;
       this.strikesText.setText(`❌ ${this.wrong}/${this.maxWrong}`);
+
+      // 🌀 Shake animation
+      this.tweens.add({
+        targets: this.maskedText,
+        x: this.maskedText.x + 10,
+        duration: 50,
+        yoyo: true,
+        repeat: 3
+      });
+
       if (this.wrong === 3) {
         this.revealRandomLetter();
       }
@@ -257,9 +266,18 @@ class MainScene extends Phaser.Scene {
     GameState.score += 10;
     this.addCoins(20);
     GameState.round++;
-    this.scene.start('GameOverScene', {
-      won: true, title: this.title, allMovies: this.movies, score: GameState.score
-    }); 
+    this.tweens.add({
+      targets: this.maskedText,
+      scale: 1.5,
+      duration: 300,
+      ease: 'Bounce.easeOut',
+      yoyo: true,
+      onComplete: () => {
+        this.scene.start('GameOverScene', {
+          won: true, title: this.title, allMovies: this.movies, score: GameState.score
+        });
+      }
+    });
   }
 
   lose() {
