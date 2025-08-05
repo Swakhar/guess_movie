@@ -51,6 +51,9 @@ class MainScene extends Phaser.Scene {
 
     // ✏️ Solve Input (and Reveal button)
     this.createSolveInput();
+
+    // Add reward button
+    this.addRewardButton();
   }
 
   createTopBar() {
@@ -66,7 +69,7 @@ class MainScene extends Phaser.Scene {
       fill: '#ff4444'
     });
 
-    this.timerText = this.add.text(this.scale.width - 120, 20, `⏱ ${this.timeLeft}s`, {
+    this.timerText = this.add.text(this.scale.width - 100 - 50, 26, `⏱ ${this.timeLeft}s`, {
       font: '20px Arial',
       fill: '#ff4444'
     });
@@ -206,6 +209,27 @@ class MainScene extends Phaser.Scene {
     wrapper.appendChild(input);
     wrapper.appendChild(solveBtn);
     document.body.appendChild(wrapper);
+  }
+
+  addRewardButton() {
+    this.rewardBtn = this.add.text(this.scale.width - 20, 20, '🎥', {
+      font: '24px Arial',
+      backgroundColor: '#fff',
+      color: '#222',
+      padding: 10
+    }).setOrigin(1, 0).setInteractive();
+
+    this.rewardBtn.on('pointerdown', () => {
+      if (typeof CrazyGames !== 'undefined') {
+        if (CrazyGames?.SDK?.rewardedAd) {
+          CrazyGames.SDK.rewardedAd.show({
+            onAdFinished: () => {
+              this.addCoins(50); // ✅ reward user
+            }
+          });
+        }
+      }
+    });
   }
 
   updateTimer() {
