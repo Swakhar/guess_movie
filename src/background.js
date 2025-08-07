@@ -3,7 +3,6 @@ class BackgroundScene extends Phaser.Scene {
     super('BackgroundScene');
   }
   preload() {
-    // Only load if not already loaded
     if (!this.textures.exists('bg')) {
       this.load.image('bg', 'assets/bg.jpg');
     }
@@ -11,10 +10,8 @@ class BackgroundScene extends Phaser.Scene {
   create() {
     this.bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'bg');
     this.bg.setDisplaySize(this.scale.width, this.scale.height);
-    this.bg.setDepth(-1000); // Always behind everything
-    // Responsive resize
+    this.bg.setDepth(-1000);
     this.scale.on('resize', this.resize, this);
-    // Launch PreloadScene on top of background
     this.scene.launch('PreloadScene');
   }
   resize(gameSize) {

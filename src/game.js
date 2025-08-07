@@ -6,11 +6,20 @@ const config = {
   dom: {
     createContainer: true
   },
-  scene: [BackgroundScene, PreloadScene, MainScene, GameOverScene],
+  scene: [
+    BackgroundScene,
+    PreloadScene,
+    BootScene,
+    MainScene,
+    GameOverScene
+  ],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
+  audio: {
+    disableWebAudio: false
+  }
 };
 
 window.GameState = {

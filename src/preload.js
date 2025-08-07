@@ -36,6 +36,6 @@ class PreloadScene extends Phaser.Scene {
       CrazyGames.SDK.game.gameplayStart();
     }
     this.allMovies = this.cache.json.get('movies');
-    this.scene.start('MainScene', { allMovies: this.allMovies });
+    this.scene.launch('BootScene', { allMovies: this.allMovies });
   }
 }
