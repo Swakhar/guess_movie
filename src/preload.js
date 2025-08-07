@@ -5,6 +5,21 @@ class PreloadScene extends Phaser.Scene {
     this.allMovies = [];
   }
   preload() {
+    const loadingBar = this.add.graphics();
+    // Listen for loading progress
+      this.load.on('progress', (value) => {
+        loadingBar.clear();
+        loadingBar.fillStyle(0xffffff, 1); // white bar
+        loadingBar.fillRect(
+          this.cameras.main.width / 4,
+          this.cameras.main.height / 2,
+          this.cameras.main.width / 2 * value,
+          20
+        );
+      });
+    this.load.on('complete', () => {
+      loadingBar.destroy();
+    });
     this.load.audio('click', 'assets/click.mp3');
     this.load.audio('bgm', 'assets/bg-music.mp3');
     this.load.json('movies', 'assets/top_movies.json');

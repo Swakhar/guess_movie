@@ -32,6 +32,8 @@ class MainScene extends Phaser.Scene {
   }
 
   create() {
+    this.sound.pauseOnBlur = true;
+    this.sound.resumeOnFocus = true;
     this.spendCoins(10);
 
     // 🖼️ Movie Poster
@@ -225,7 +227,9 @@ class MainScene extends Phaser.Scene {
           CrazyGames.SDK.rewardedAd.show({
             onAdFinished: () => {
               this.addCoins(50); // ✅ reward user
-            }
+            },
+            onAdSkipped: () => {},
+            onAdError: () => {}
           });
         }
       }
@@ -305,6 +309,9 @@ class MainScene extends Phaser.Scene {
   }
 
   lose() {
+    if (typeof CrazyGames !== 'undefined') {
+      CrazyGames.SDK.ad.requestAd('midgame');
+    }
     this.scene.start('GameOverScene', {
       won: false, title: this.title, allMovies: this.movies, score: GameState.score
     }); 
