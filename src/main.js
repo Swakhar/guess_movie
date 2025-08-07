@@ -1,4 +1,4 @@
-class MainScene extends Phaser.Scene {
+class MainScene extends BaseScene {
   constructor() {
     super('MainScene');
     this.letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
@@ -389,24 +389,6 @@ class MainScene extends Phaser.Scene {
     } else {
       return false;
     }
-  }
-
-  showNotice(message) {
-    const noticeBox = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 320, 100, 0x000000, 0.7)
-      .setOrigin(0.5)
-      .setDepth(1000);
-
-    const noticeText = this.add.text(this.scale.width / 2, this.scale.height / 2, message, {
-      font: '18px Arial',
-      color: '#fff',
-      align: 'center',
-      wordWrap: { width: 280 }
-    }).setOrigin(0.5).setDepth(1001);
-
-    this.time.delayedCall(2000, () => {
-      noticeBox.destroy();
-      noticeText.destroy();
-    });
   }
 
   shutdown() {

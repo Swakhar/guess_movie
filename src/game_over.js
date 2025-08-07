@@ -1,4 +1,4 @@
-class GameOverScene extends Phaser.Scene {
+class GameOverScene extends BaseScene {
   constructor() {
     super('GameOverScene');
   }
@@ -66,34 +66,54 @@ class GameOverScene extends Phaser.Scene {
     });
 
     offsetY += 60;
-    this.add.text(centerX, centerY + offsetY, '🗑 Reset Game Data', {
-      font: '16px Arial',
-      backgroundColor: '#eee',
-      color: '#ff0000',
-      padding: { x: 12, y: 6 },
-      borderRadius: 4
+
+    const shareBtn = this.add.text(centerX, centerY + offsetY, '🔗 Share', {
+      font: '22px Arial',
+      backgroundColor: '#4CAF50',
+      color: '#fff',
+      padding: { x: 20, y: 10 },
+      borderRadius: 5
     })
     .setOrigin(0.5)
     .setInteractive()
-    .on('pointerdown', () => {
-      localStorage.removeItem('playerName');
-      localStorage.removeItem('coins');
-      location.reload();
+    .on('pointerdown', async () => {
+      const shareData = {
+        title: '🎬 Movie Master',
+        text: 'Try to beat my score in Movie Master',
+        url: window.location.href
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (e) {
+          // User cancelled share
+        }
+      } else {
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(shareData.url);
+          shareBtn.setText('✅ Link Copied!');
+          setTimeout(() => shareBtn.setText('🔗 Share'), 2000);
+        } catch (e) {
+          this.showNotice('Copy this link:\n' + shareData.url);
+        }
+      }
     });
   }
 
   async fetchHighScores(score) {
-    let name = localStorage.getItem('playerName');
+    if (typeof CrazyGames !== 'undefined') {
+      // Submit score and show leaderboard (no need for player name)
+      await CrazyGames.SDK.leaderboard.setScore("movie-quiz", score);
+      CrazyGames.SDK.leaderboard.show("movie-quiz");
+      return []; // Don't show your own high scores
+    }
 
+    // Fallback for non-CrazyGames
+    let name = localStorage.getItem('playerName');
     if (!name) {
       name = prompt("Enter your name:") || 'Player';
       localStorage.setItem('playerName', name);
-    }
-
-    if (typeof CrazyGames !== 'undefined') {
-      CrazyGames.SDK.leaderboard.setScore("movie-quiz", score);
-      CrazyGames.SDK.leaderboard.show("movie-quiz");
-      return [];
     }
 
     await fetch('https://submitscore-waeruwnaja-uc.a.run.app', {

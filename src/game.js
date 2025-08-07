@@ -10,6 +10,7 @@ const config = {
     BackgroundScene,
     PreloadScene,
     BootScene,
+    BaseScene,
     MainScene,
     GameOverScene
   ],
