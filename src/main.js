@@ -39,6 +39,13 @@ class MainScene extends Phaser.Scene {
     // 🖼️ Movie Poster
     const poster = this.add.image(this.scale.width / 2, 150, this.title);
     poster.setScale(Math.min(300 / poster.width, 300 / poster.height));
+    poster.setAlpha(0);
+    this.tweens.add({
+      targets: poster,
+      alpha: 1,
+      duration: 600,
+      ease: 'Power2'
+    });
 
     this.maskedText = this.add.text(this.scale.width / 2, 300, this.getMasked(), {
       font: '36px Courier',
@@ -119,13 +126,24 @@ class MainScene extends Phaser.Scene {
       });
     });
 
-    // Reveal button (moved to right corner)
-    const revealBtn = this.add.text(this.scale.width - 120, this.scale.height - 60, '💡 Reveal (-10)', {
-      font: '18px Arial',
-      backgroundColor: '#333',
-      color: '#fff',
-      padding: 10
-    }).setOrigin(0.5).setInteractive();
+    const revealBtn = this.add.text(this.scale.width / 2, this.scale.height - 120, '💡 Reveal (-10)', {
+      font: '22px Arial',
+      backgroundColor: '#ffcc00',
+      color: '#000',
+      padding: 10,
+      fontStyle: 'bold'
+    })
+    .setOrigin(0.5)
+    .setInteractive();
+
+    revealBtn.setShadow(2, 2, '#333', 2, true, true);
+
+    revealBtn.on('pointerover', () => {
+      revealBtn.setStyle({ backgroundColor: '#ffee00' });
+    });
+    revealBtn.on('pointerout', () => {
+      revealBtn.setStyle({ backgroundColor: '#ffcc00' });
+    });
 
     revealBtn.on('pointerdown', () => {
       this.clickSound?.play();
@@ -168,8 +186,8 @@ class MainScene extends Phaser.Scene {
     const wrapper = document.createElement('div');
     wrapper.id = 'solveWrapper';
     wrapper.style.position = 'absolute';
-    wrapper.style.top = '88%';
     wrapper.style.left = '50%';
+    wrapper.style.bottom = '20px';  // ✅ bottom instead of top
     wrapper.style.transform = 'translateX(-50%)';
     wrapper.style.display = 'flex';
     wrapper.style.gap = '10px';
@@ -317,7 +335,14 @@ class MainScene extends Phaser.Scene {
 
   lose() {
     if (typeof CrazyGames !== 'undefined') {
-      CrazyGames.SDK.ad.requestAd('midgame');
+      this.scene.pause();
+      this.sound.mute = true;
+
+      CrazyGames.SDK.ad.requestAd('midgame', {
+        onAdFinished: () => this.resumeGame(),
+        onAdError: () => this.resumeGame(),
+        onAdSkipped: () => this.resumeGame()
+      });
     }
     this.scene.start('GameOverScene', {
       won: false, title: this.title, allMovies: this.movies, score: GameState.score
