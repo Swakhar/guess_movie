@@ -222,18 +222,25 @@ class MainScene extends Phaser.Scene {
     }).setOrigin(1, 0).setInteractive();
 
     this.rewardBtn.on('pointerdown', () => {
-      if (typeof CrazyGames !== 'undefined') {
-        if (CrazyGames?.SDK?.rewardedAd) {
-          CrazyGames.SDK.rewardedAd.show({
-            onAdFinished: () => {
-              this.addCoins(50); // ✅ reward user
-            },
-            onAdSkipped: () => {},
-            onAdError: () => {}
-          });
-        }
+      if (typeof CrazyGames !== 'undefined' && CrazyGames?.SDK?.rewardedAd) {
+        this.scene.pause();
+        this.sound.mute = true;
+
+        CrazyGames.SDK.rewardedAd.show({
+          onAdFinished: () => {
+            this.addCoins(50);
+            this.resumeGame();
+          },
+          onAdSkipped: () => this.resumeGame(),
+          onAdError: () => this.resumeGame()
+        });
       }
     });
+  }
+
+  resumeGame() {
+    this.sound.mute = false;
+    this.scene.resume();
   }
 
   updateTimer() {
