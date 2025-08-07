@@ -6,14 +6,12 @@
   <title>Phraser Game</title>
   <style>
     body {
-      cursor: none;
       margin: 0;
       overflow: hidden;
       background: #000;
     }
 
     canvas {
-      cursor: none;
       display: block;
       width: 100vw;
       height: 100vh;
@@ -29,7 +27,6 @@
       const script = document.createElement('script');
       script.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
       script.onload = () => {
-        // Store for global use
         window.CrazyGamesSDK = window.CrazyGames?.SDK;
       };
       document.head.appendChild(script);

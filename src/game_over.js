@@ -78,7 +78,6 @@ class GameOverScene extends Phaser.Scene {
     .on('pointerdown', () => {
       localStorage.removeItem('playerName');
       localStorage.removeItem('coins');
-      alert("Game data reset. Reloading...");
       location.reload();
     });
   }

@@ -68,6 +68,17 @@ class MainScene extends Phaser.Scene {
   createTopBar() {
     this.add.rectangle(this.scale.width / 2, 10, this.scale.width, 50, 0x000000, 0.4).setOrigin(0.5);
 
+    const helpIcon = this.add.text(this.scale.width - 40, 70, '❓', {
+      font: '20px Arial',
+      color: '#ffffff',
+      backgroundColor: '#444',
+      padding: 8
+    }).setOrigin(1, 0).setInteractive();
+
+    helpIcon.on('pointerdown', () => {
+      this.showHelpPopup();
+    });
+
     this.coinsText = this.add.text(30, 20, `🪙 ${GameState.coins}`, {
       font: '20px Arial',
       fill: '#fff'
@@ -88,6 +99,65 @@ class MainScene extends Phaser.Scene {
       callback: this.updateTimer,
       callbackScope: this,
       loop: true
+    });
+  }
+
+  showHelpPopup() {
+    this.sound.mute = true;
+    this.timerEvent.paused = true;
+
+    const solveWrapper = document.getElementById('solveWrapper');
+    if (solveWrapper) solveWrapper.style.display = 'none';
+
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const popupDepth = 9999;
+
+    // Create a full-screen transparent blocker to catch clicks behind
+    this.helpOverlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
+      .setInteractive()
+      .setDepth(popupDepth);
+
+    // Center popup box
+    this.helpBg = this.add.rectangle(width / 2, height / 2, 360, 240, 0x111111, 0.9)
+      .setOrigin(0.5)
+      .setDepth(popupDepth + 1);
+
+    this.helpText = this.add.text(width / 2, height / 2 - 40,
+      "📝 How to Play:\n\n" +
+      "- Tap letters to guess the movie.\n" +
+      "- Use Reveal (-10) to show a letter.\n" +
+      "- Earn coins by watching ads.\n" +
+      "- You win by guessing all letters before strikes or timer ends.",
+      {
+        font: '18px Arial',
+        color: '#fff',
+        align: 'center',
+        wordWrap: { width: 320 }
+      })
+      .setOrigin(0.5)
+      .setDepth(popupDepth + 2);
+
+    // Close button (moved above popup & spaced well)
+    this.closeBtn = this.add.text(width / 2, height / 2 + 80, 'Close', {
+      font: '20px Arial',
+      backgroundColor: '#ff4444',
+      color: '#fff',
+      padding: 10
+    })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(popupDepth + 3);
+
+    this.closeBtn.on('pointerdown', () => {
+      this.helpOverlay.destroy();
+      this.helpBg.destroy();
+      this.helpText.destroy();
+      this.closeBtn.destroy();
+      this.sound.mute = false;
+      this.timerEvent.paused = false;
+      const solveWrapper = document.getElementById('solveWrapper');
+      if (solveWrapper) solveWrapper.style.display = 'flex';
     });
   }
 
@@ -135,6 +205,15 @@ class MainScene extends Phaser.Scene {
     })
     .setOrigin(0.5)
     .setInteractive();
+
+    this.tweens.add({
+      targets: revealBtn,
+      scale: { from: 1, to: 1.15 },
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
 
     revealBtn.setShadow(2, 2, '#333', 2, true, true);
 
@@ -196,7 +275,7 @@ class MainScene extends Phaser.Scene {
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = 'Guess the movie name';
+    input.placeholder = 'Movie name';
     input.id = 'solveInput';
     input.style.fontSize = window.innerWidth < 500 ? '14px' : '18px';
     input.style.padding = '10px';
@@ -232,26 +311,30 @@ class MainScene extends Phaser.Scene {
   }
 
   addRewardButton() {
-    this.rewardBtn = this.add.text(this.scale.width - 20, 20, '🎥', {
-      font: '24px Arial',
-      backgroundColor: '#fff',
-      color: '#222',
+    const rewardBtn = this.add.text(30, 60, '🎥 Get 50 Coins', {
+      font: '20px Arial',
+      backgroundColor: '#ffff66',
+      color: '#000',
       padding: 10
-    }).setOrigin(1, 0).setInteractive();
+    }).setOrigin(0, 0).setInteractive();
 
-    this.rewardBtn.on('pointerdown', () => {
-      if (typeof CrazyGames !== 'undefined' && CrazyGames?.SDK?.rewardedAd) {
-        this.scene.pause();
-        this.sound.mute = true;
+    rewardBtn.setShadow(2, 2, '#333', 2, true, true);
 
-        CrazyGames.SDK.rewardedAd.show({
-          onAdFinished: () => {
-            this.addCoins(50);
-            this.resumeGame();
-          },
-          onAdSkipped: () => this.resumeGame(),
-          onAdError: () => this.resumeGame()
-        });
+    rewardBtn.on('pointerdown', () => {
+      if (typeof CrazyGames !== 'undefined') {
+        if (CrazyGames?.SDK?.rewardedAd) {
+          this.scene.pause();
+          this.sound.mute = true;
+
+          CrazyGames.SDK.rewardedAd.show({
+            onAdFinished: () => {
+              this.addCoins(50);
+              this.resumeGame();
+            },
+            onAdSkipped: () => this.resumeGame(),
+            onAdError: () => this.resumeGame()
+          });
+        }
       }
     });
   }
@@ -277,7 +360,7 @@ class MainScene extends Phaser.Scene {
 
   revealRandomLetter() {
     if (!this.spendCoins(10)) {
-      alert("Not enough coins to reveal a letter!");
+      this.showNotice("Not enough coins to reveal a letter!");
       return;
     } else {
       this.coinsText.setText(`🪙 ${GameState.coins}`)
@@ -306,6 +389,24 @@ class MainScene extends Phaser.Scene {
     } else {
       return false;
     }
+  }
+
+  showNotice(message) {
+    const noticeBox = this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 320, 100, 0x000000, 0.7)
+      .setOrigin(0.5)
+      .setDepth(1000);
+
+    const noticeText = this.add.text(this.scale.width / 2, this.scale.height / 2, message, {
+      font: '18px Arial',
+      color: '#fff',
+      align: 'center',
+      wordWrap: { width: 280 }
+    }).setOrigin(0.5).setDepth(1001);
+
+    this.time.delayedCall(2000, () => {
+      noticeBox.destroy();
+      noticeText.destroy();
+    });
   }
 
   shutdown() {

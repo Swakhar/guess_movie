@@ -9,9 +9,14 @@ class BootScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(500);
 
-    this.add.text(width / 2, height / 2 - 80, 'Guess the Movie', {
+    this.add.text(width / 2, height / 2 - 80, '🎬 Movie Master', {
       font: '40px Arial',
       color: '#ffffff'
+    }).setOrigin(0.5);
+
+    this.add.text(width / 2, height / 2 - 30, 'Guess the Movie', {
+      font: '22px Arial',
+      color: '#aaa'
     }).setOrigin(0.5);
 
     // Tap to start text
