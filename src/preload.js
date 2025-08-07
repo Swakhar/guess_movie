@@ -20,6 +20,7 @@ class PreloadScene extends Phaser.Scene {
     this.load.on('complete', () => {
       loadingBar.destroy();
     });
+    this.input.setDefaultCursor('url(assets/cursor.png), pointer');
     this.load.audio('click', 'assets/click.mp3');
     this.load.audio('bgm', 'assets/bg-music.mp3');
     this.load.json('movies', 'assets/top_movies.json');
