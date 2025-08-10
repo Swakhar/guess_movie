@@ -417,14 +417,14 @@ class MainScene extends BaseScene {
   }
 
   lose() {
-    if (typeof CrazyGames !== 'undefined') {
+    const sdk = window.CrazyGames?.SDK;
+    if (sdk?.ad) {
       this.scene.pause();
       this.sound.mute = true;
-
-      CrazyGames.SDK.ad.requestAd('midgame', {
+      sdk.ad.requestAd('midgame', {
         onAdFinished: () => this.resumeGame(),
         onAdError: () => this.resumeGame(),
-        onAdSkipped: () => this.resumeGame()
+        onAdSkipped: () => this.resumeGame(),
       });
     }
     this.scene.start('GameOverScene', {

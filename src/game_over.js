@@ -102,11 +102,10 @@ class GameOverScene extends BaseScene {
   }
 
   async fetchHighScores(score) {
-    if (typeof CrazyGames !== 'undefined') {
-      // Submit score and show leaderboard (no need for player name)
-      await CrazyGames.SDK.leaderboard.setScore("movie-quiz", score);
-      CrazyGames.SDK.leaderboard.show("movie-quiz");
-      return []; // Don't show your own high scores
+    if (CrazyGames?.SDK?.leaderboard) {
+      await CrazyGames.SDK.leaderboard.setScore('movie-quiz', score);
+      CrazyGames.SDK.leaderboard.show('movie-quiz');
+      return [];
     }
 
     // Fallback for non-CrazyGames

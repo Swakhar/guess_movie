@@ -32,9 +32,10 @@ class PreloadScene extends Phaser.Scene {
 
     this.clickSound = this.sound.add('click');
 
-    if (typeof CrazyGames !== 'undefined') {
-      CrazyGames.SDK.game.loadingStart();
-      CrazyGames.SDK.game.gameplayStart();
+    const sdk = window.CrazyGames?.SDK;
+    if (sdk?.game) {
+      sdk.game.loadingStart();
+      sdk.game.gameplayStart();
     }
     this.allMovies = this.cache.json.get('movies');
     this.scene.launch('BootScene', { allMovies: this.allMovies });
