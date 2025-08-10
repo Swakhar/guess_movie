@@ -102,9 +102,10 @@ class GameOverScene extends BaseScene {
   }
 
   async fetchHighScores(score) {
-    if (CrazyGames?.SDK?.leaderboard) {
-      await CrazyGames.SDK.leaderboard.setScore('movie-quiz', score);
-      CrazyGames.SDK.leaderboard.show('movie-quiz');
+    const sdk = window.CrazyGames?.SDK;
+    if (sdk?.leaderboard) {
+      await sdk.leaderboard.setScore('movie-quiz', score);
+      sdk.leaderboard.show('movie-quiz');
       return [];
     }
 

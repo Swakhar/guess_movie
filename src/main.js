@@ -37,7 +37,8 @@ class MainScene extends BaseScene {
     this.spendCoins(10);
 
     // 🖼️ Movie Poster
-    const poster = this.add.image(this.scale.width / 2, 150, this.title);
+    const posterY = this.scale.height * 0.25;
+    const poster = this.add.image(this.scale.width / 2, posterY, this.title);
     poster.setScale(Math.min(300 / poster.width, 300 / poster.height));
     poster.setAlpha(0);
     this.tweens.add({
@@ -47,7 +48,8 @@ class MainScene extends BaseScene {
       ease: 'Power2'
     });
 
-    this.maskedText = this.add.text(this.scale.width / 2, 300, this.getMasked(), {
+    const maskedY = this.scale.height * 0.40;
+    this.maskedText = this.add.text(this.scale.width / 2, maskedY, this.getMasked(), {
       font: '36px Courier',
       fill: '#ffffff'
     }).setOrigin(0.5);
@@ -171,7 +173,7 @@ class MainScene extends BaseScene {
   createKeyboard() {
     const spacing = 45;
     const startX = this.scale.width / 2 - (spacing * 6);
-    const startY = 400;
+    const startY = this.scale.height * 0.55;
     const rowLength = 13;
 
     this.letters.forEach((letter, i) => {
@@ -266,7 +268,7 @@ class MainScene extends BaseScene {
     wrapper.id = 'solveWrapper';
     wrapper.style.position = 'absolute';
     wrapper.style.left = '50%';
-    wrapper.style.bottom = '20px';  // ✅ bottom instead of top
+    wrapper.style.bottom = '20px';
     wrapper.style.transform = 'translateX(-50%)';
     wrapper.style.display = 'flex';
     wrapper.style.gap = '10px';
