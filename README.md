@@ -1,6 +1,6 @@
 # 🎬 Guess the Movie
 
-A fun browser game where you guess the movie title from a poster! Built with Phaser.
+A fun browser game where you guess the movie title from a poster!
 
 ---
 
