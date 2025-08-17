@@ -14,7 +14,6 @@ class MainScene extends BaseScene {
   }
 
   preload() {
-    // Choose easier (shorter) titles for early rounds
     const easyMovies = this.movies.filter(m => m.title.length <= 10);
     const mediumMovies = this.movies.filter(m => m.title.length <= 15);
     const hardMovies = this.movies;
@@ -37,19 +36,13 @@ class MainScene extends BaseScene {
     this.spendCoins(10);
 
     // 🖼️ Movie Poster
-    const posterY = this.scale.height * 0.25;
-    const poster = this.add.image(this.scale.width / 2, posterY, this.title);
-    poster.setScale(Math.min(300 / poster.width, 300 / poster.height));
-    poster.setAlpha(0);
-    this.tweens.add({
-      targets: poster,
-      alpha: 1,
-      duration: 600,
-      ease: 'Power2'
-    });
+    this.poster = this.add.image(this.scale.width / 2, this.scale.height * 0.25, this.title);
+    this.poster.setScale(Math.min(300 / this.poster.width, 300 / this.poster.height));
+    this.poster.setAlpha(0);
+    this.tweens.add({ targets: this.poster, alpha: 1, duration: 600, ease: 'Power2' });
 
-    const maskedY = this.scale.height * 0.40;
-    this.maskedText = this.add.text(this.scale.width / 2, maskedY, this.getMasked(), {
+    // Masked text
+    this.maskedText = this.add.text(this.scale.width / 2, this.scale.height * 0.40, this.getMasked(), {
       font: '36px Courier',
       fill: '#ffffff'
     }).setOrigin(0.5);
@@ -65,6 +58,33 @@ class MainScene extends BaseScene {
 
     // Add reward button
     this.addRewardButton();
+
+    // ✅ Handle resizing
+    this.scale.on('resize', (gameSize) => {
+      const { width, height } = gameSize;
+      this.poster.setPosition(width / 2, height * 0.25);
+      this.maskedText.setPosition(width / 2, height * 0.40);
+
+      // Adjust keyboard position
+      const spacing = 45;
+      const startX = width / 2 - (spacing * 6);
+      const startY = height * 0.55;
+      this.keyboardKeys.forEach((key, i) => {
+        const x = startX + (i % 13) * spacing;
+        const y = startY + Math.floor(i / 13) * spacing;
+        key.setPosition(x, y);
+      });
+
+      // Adjust reveal button
+      if (this.revealBtn) {
+        this.revealBtn.setPosition(width / 2, height - 120);
+      }
+
+      // Adjust reward button
+      if (this.rewardBtn) {
+        this.rewardBtn.setPosition(30, 60);
+      }
+    });
   }
 
   createTopBar() {
@@ -176,6 +196,8 @@ class MainScene extends BaseScene {
     const startY = this.scale.height * 0.55;
     const rowLength = 13;
 
+    this.keyboardKeys = [];
+
     this.letters.forEach((letter, i) => {
       const x = startX + (i % rowLength) * spacing;
       const y = startY + Math.floor(i / rowLength) * spacing;
@@ -189,16 +211,17 @@ class MainScene extends BaseScene {
 
       key.on('pointerover', () => key.setStyle({ backgroundColor: '#ddd' }));
       key.on('pointerout', () => key.setStyle({ backgroundColor: '#f0f0f0' }));
-
       key.on('pointerdown', () => {
         this.clickSound?.play();
         key.disableInteractive();
         key.setAlpha(0.5);
         this.handleLetter(letter);
       });
+
+      this.keyboardKeys.push(key);
     });
 
-    const revealBtn = this.add.text(this.scale.width / 2, this.scale.height - 120, '💡 Reveal (-10)', {
+    this.revealBtn = this.add.text(this.scale.width / 2, this.scale.height - 120, '💡 Reveal (-10)', {
       font: '22px Arial',
       backgroundColor: '#ffcc00',
       color: '#000',
@@ -209,7 +232,7 @@ class MainScene extends BaseScene {
     .setInteractive();
 
     this.tweens.add({
-      targets: revealBtn,
+      targets: this.revealBtn,
       scale: { from: 1, to: 1.15 },
       duration: 500,
       yoyo: true,
@@ -217,16 +240,16 @@ class MainScene extends BaseScene {
       ease: 'Sine.easeInOut'
     });
 
-    revealBtn.setShadow(2, 2, '#333', 2, true, true);
+    this.revealBtn.setShadow(2, 2, '#333', 2, true, true);
 
-    revealBtn.on('pointerover', () => {
-      revealBtn.setStyle({ backgroundColor: '#ffee00' });
+    this.revealBtn.on('pointerover', () => {
+      this.revealBtn.setStyle({ backgroundColor: '#ffee00' });
     });
-    revealBtn.on('pointerout', () => {
-      revealBtn.setStyle({ backgroundColor: '#ffcc00' });
+    this.revealBtn.on('pointerout', () => {
+      this.revealBtn.setStyle({ backgroundColor: '#ffcc00' });
     });
 
-    revealBtn.on('pointerdown', () => {
+    this.revealBtn.on('pointerdown', () => {
       this.clickSound?.play();
       this.revealRandomLetter();
     });
@@ -313,30 +336,29 @@ class MainScene extends BaseScene {
   }
 
   addRewardButton() {
-    const rewardBtn = this.add.text(30, 60, '🎥 Get 50 Coins', {
+    this.rewardBtn = this.add.text(30, 60, '🎥 Get 50 Coins', {
       font: '20px Arial',
       backgroundColor: '#ffff66',
       color: '#000',
       padding: 10
     }).setOrigin(0, 0).setInteractive();
 
-    rewardBtn.setShadow(2, 2, '#333', 2, true, true);
+    this.rewardBtn.setShadow(2, 2, '#333', 2, true, true);
 
-    rewardBtn.on('pointerdown', () => {
-      if (typeof CrazyGames !== 'undefined') {
-        if (CrazyGames?.SDK?.rewardedAd) {
-          this.scene.pause();
-          this.sound.mute = true;
+    this.rewardBtn.on('pointerdown', () => {
+      const rewardedAd = window.CrazyGames?.SDK?.rewardedAd;
+      if (rewardedAd) {
+        this.scene.pause();
+        this.sound.mute = true;
 
-          CrazyGames.SDK.rewardedAd.show({
-            onAdFinished: () => {
-              this.addCoins(50);
-              this.resumeGame();
-            },
-            onAdSkipped: () => this.resumeGame(),
-            onAdError: () => this.resumeGame()
-          });
-        }
+        rewardedAd.show({
+          onAdFinished: () => {
+            this.addCoins(50);
+            this.resumeGame();
+          },
+          onAdSkipped: () => this.resumeGame(),
+          onAdError: () => this.resumeGame()
+        });
       }
     });
   }
